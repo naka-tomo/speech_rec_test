@@ -7,7 +7,21 @@
     <script>
         var flag_speech = 0;
  
-        function vr_function() {
+        var wSck= new WebSocket("ws://localhost:60000/");
+
+        wSck.onopen = function() {
+            document.getElementById('status_connection').innerHTML += "接続完了";
+        };
+
+        wSck.onmessage = function(e) {
+        };
+
+        var send_msg = function(val) {
+            var line = document.getElementById('msg');
+            wSck.send(line.value);
+        };
+
+        function start_sr() {
             window.SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
             var recognition = new webkitSpeechRecognition();
             recognition.lang = 'ja';
@@ -15,19 +29,19 @@
             recognition.continuous = true;
  
             recognition.onsoundstart = function() {
-                document.getElementById('status').innerHTML = "認識中";
+                document.getElementById('status_sr').innerHTML = "認識中";
             };
             recognition.onnomatch = function() {
-                document.getElementById('status').innerHTML = "もう一度試してください";
+                document.getElementById('status_sr').innerHTML = "認識失敗";
             };
             recognition.onerror = function() {
-                document.getElementById('status').innerHTML = "エラー";
+                document.getElementById('status_sr').innerHTML = "エラー";
                 if(flag_speech == 0)
-                  vr_function();
+                start_sr();
             };
             recognition.onsoundend = function() {
-                document.getElementById('status').innerHTML = "停止中";
-                  vr_function();
+                document.getElementById('status_sr').innerHTML = "停止中";
+                start_sr();
             };
  
             recognition.onresult = function(event) {
@@ -36,30 +50,38 @@
                     if (results[i].isFinal)
                     {
                         document.getElementById('result_text').innerHTML = results[i][0].transcript;
-                        vr_function();
+                        wSck.send(results[i][0].transcript);
+                        start_sr();
                     }
                     else
                     {
-                        document.getElementById('result_text').innerHTML = "[途中経過] " + results[i][0].transcript;
+                        document.getElementById('result_text').innerHTML = "[認識中...] " + results[i][0].transcript;
                         flag_speech = 1;
                     }
                 }
             }
             flag_speech = 0;
-            document.getElementById('status').innerHTML = "start";
+            document.getElementById('status_sr').innerHTML = "start";
             recognition.start();
         }
     </script> 
 </head>
  
 <body>
-    <textarea id="result_text" cols="100" rows="10">
-    </textarea>
+    認識結果：
+    <textarea id="result_text" cols="100" rows="5"></textarea>
     <br>
-    <textarea id="status" cols="100" rows="1">
-    </textarea>
+    認識状態：
+    <textarea id="status_sr" cols="100" rows="1"></textarea>
     <br>
-    <input type="button" onClick="vr_function();" value="音認開始">
+    接続状態：
+    <textarea id="status_connection" cols="100" rows="1"></textarea>
+    <input type="button" onClick="start_sr();" value="音認開始">
+    <br>
+    <br>
+    送信テスト：
+    <textarea id="msg" cols="100" rows="1"></textarea>
+    <input type="button" onClick="send_msg();" value="送信">
 </body>
  
 </html>
