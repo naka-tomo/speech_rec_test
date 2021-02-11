@@ -9,13 +9,17 @@
  
         var wSck= new WebSocket("ws://localhost:60000/");
 
+        // WebSocket関連の関数
         wSck.onopen = function() {
             document.getElementById('status_connection').innerHTML += "接続完了";
         };
 
         wSck.onmessage = function(e) {
+            document.getElementById('utterance').value = e.data;
+            say()
         };
 
+        // 音声認識関数
         var send_msg = function(val) {
             var line = document.getElementById('msg');
             wSck.send(line.value);
@@ -64,24 +68,53 @@
             document.getElementById('status_sr').innerHTML = "start";
             recognition.start();
         }
+
+        // 発話関数
+        function say() {
+            var line = document.getElementById('utterance');
+            const uttr = new SpeechSynthesisUtterance(line.value)
+
+            uttr.lang = "ja-JP"
+            uttr.rate = 1.0
+            uttr.pitch = 1.5
+            uttr.volume = 1.0
+
+            speechSynthesis.speak(uttr)
+        }
+
+        function start_all(){
+            // 一度ボタンから発話させないと動作しないため，発話させる
+            document.getElementById('utterance').value = "音声認識を開始しました";
+            say()
+
+            start_sr()
+        }
     </script> 
 </head>
  
 <body>
-    認識結果：
-    <textarea id="result_text" cols="100" rows="5"></textarea>
-    <br>
-    認識状態：
-    <textarea id="status_sr" cols="100" rows="1"></textarea>
-    <br>
-    接続状態：
-    <textarea id="status_connection" cols="100" rows="1"></textarea>
-    <input type="button" onClick="start_sr();" value="音認開始">
+    <input type="button" onClick="start_all();" value="音認開始">
     <br>
     <br>
-    送信テスト：
-    <textarea id="msg" cols="100" rows="1"></textarea>
+    認識結果：<br>
+    <textarea id="result_text" cols="50" rows="5"></textarea>
+    <br>
+    認識状態：<br>
+    <textarea id="status_sr" cols="50" rows="1"></textarea>
+    <br>
+    接続状態：<br>
+    <textarea id="status_connection" cols="50" rows="1"></textarea>
+    <br>
+    <br>
+    送信テスト：<br>
+    <textarea id="msg" cols="50" rows="1"></textarea>
     <input type="button" onClick="send_msg();" value="送信">
+    <br>
+    <br>
+    発話：<br>
+    <textarea id="utterance" cols="50" rows="1"></textarea>
+    <input type="button" onClick="say();" value="発話">
+
 </body>
  
 </html>
